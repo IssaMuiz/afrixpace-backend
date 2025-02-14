@@ -1,15 +1,10 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import User, { UserDocument } from "../models/user-schema";
+import User from "../models/user-schema";
 import asyncHandler from "express-async-handler";
-import { decode } from "punycode";
-
-export interface AuthenticatedRequest extends Request {
-  user?: UserDocument;
-}
 
 export const authMiddleware = asyncHandler(
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers["authorization"];
 
     console.log(authHeader);
@@ -29,19 +24,16 @@ export const authMiddleware = asyncHandler(
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 
-      const user = await User.findById(decoded.userId);
-      console.log(user);
+      const user = await User.findById(decoded.id);
 
       if (!user) {
-        res.status(404).json({
+        res.json({
           success: false,
           message: "User not found",
         });
       }
-
       console.log(decoded);
-
-      req.user = user as UserDocument;
+      req.user = user;
 
       next();
     } catch (error) {

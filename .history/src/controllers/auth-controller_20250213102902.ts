@@ -163,56 +163,49 @@ export const updateUserProfile = asyncHandler(
 
 export const changePassword = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body;
 
-      const user = await User.findById(req.user!.id);
+    const user = await User.findById(req.user!._id);
 
-      if (!user) {
-        res.status(401).json({
-          success: false,
-          message: "Invalid credentials",
-        });
-      }
-
-      if (oldPassword === newPassword) {
-        res.status(401).json({
-          success: false,
-          message: "Old password cannot be given as the new password",
-        });
-      }
-
-      const isPasswordMatched = await bcryptjs.compare(
-        oldPassword,
-        user?.password as string
-      );
-
-      if (!isPasswordMatched) {
-        res.status(401).json({
-          success: false,
-          message: "Invalid password",
-        });
-      }
-      const salt = await bcryptjs.genSalt(12);
-
-      const newlyHashedPassword = await bcryptjs.hash(newPassword, salt);
-
-      user!.password = newlyHashedPassword as string;
-
-      await user?.save();
-
-      res.status(200).json({
-        success: true,
-        message: "Password changed successfully",
-        user,
-      });
-    } catch (error) {
-      console.error("Something went wrong!", error);
-      res.status(500).json({
+    if (!user) {
+      res.status(401).json({
         success: false,
-        message: "Something went wrong!",
+        message: "Invalid credentials",
       });
     }
+
+    if (oldPassword === newPassword) {
+      res.status(401).json({
+        success: false,
+        message: "Old password cannot be given as the new password",
+      });
+    }
+
+    const isPasswordMatched = await bcryptjs.compare(
+      newPassword,
+      user?.password as string
+    );
+
+    if (!isPasswordMatched) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+
+    const salt = await bcryptjs.genSalt(12);
+
+    const newlyHashedPassword = await bcryptjs.hash(newPassword, salt);
+
+    user!.password = newlyHashedPassword as string;
+
+    await user?.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+      user,
+    });
   }
 );
 
@@ -230,15 +223,5 @@ export const forgotPassword = asyncHandler(
     }
 
     const resetToken = generateToken(user?._id);
-
-    //Here, you would send an email with the resetToken (using nodemailer)
-    console.log(
-      `Reset link: http://localhost:5000/reset-password/${resetToken}`
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent successfully!",
-    });
   }
 );

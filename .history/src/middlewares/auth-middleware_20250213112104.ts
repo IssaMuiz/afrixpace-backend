@@ -29,8 +29,8 @@ export const authMiddleware = asyncHandler(
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 
-      const user = await User.findById(decoded.userId);
-      console.log(user);
+      const user = await User.findById(decoded.id);
+      console.log(decoded);
 
       if (!user) {
         res.status(404).json({

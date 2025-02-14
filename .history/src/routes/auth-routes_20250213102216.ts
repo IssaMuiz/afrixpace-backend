@@ -8,7 +8,6 @@ import {
   refreshToken,
   updateUserProfile,
   getUserProfile,
-  forgotPassword,
 } from "../controllers/auth-controller";
 
 const router = express.Router();
@@ -16,10 +15,8 @@ const router = express.Router();
 router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
-router.put("/change-password", authMiddleware, changePassword);
-router.put("/profile", authMiddleware, updateUserProfile);
-router.get("/profile", authMiddleware, getUserProfile);
-router.post("/refresh-token", refreshToken);
-router.post("/forgot-password", forgotPassword);
+router.post("/changePassword", authMiddleware, changePassword);
+router.put("/updateUserProfile", authMiddleware, updateUserProfile);
+router.get("/getUserProfile", authMiddleware, getUserProfile);
 
 export default router;

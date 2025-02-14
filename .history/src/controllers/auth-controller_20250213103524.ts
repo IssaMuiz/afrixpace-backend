@@ -166,7 +166,7 @@ export const changePassword = asyncHandler(
     try {
       const { oldPassword, newPassword } = req.body;
 
-      const user = await User.findById(req.user!.id);
+      const user = await User.findById(req.user!._id);
 
       if (!user) {
         res.status(401).json({
@@ -183,7 +183,7 @@ export const changePassword = asyncHandler(
       }
 
       const isPasswordMatched = await bcryptjs.compare(
-        oldPassword,
+        newPassword,
         user?.password as string
       );
 
@@ -193,6 +193,7 @@ export const changePassword = asyncHandler(
           message: "Invalid password",
         });
       }
+
       const salt = await bcryptjs.genSalt(12);
 
       const newlyHashedPassword = await bcryptjs.hash(newPassword, salt);
@@ -230,15 +231,5 @@ export const forgotPassword = asyncHandler(
     }
 
     const resetToken = generateToken(user?._id);
-
-    //Here, you would send an email with the resetToken (using nodemailer)
-    console.log(
-      `Reset link: http://localhost:5000/reset-password/${resetToken}`
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent successfully!",
-    });
   }
 );

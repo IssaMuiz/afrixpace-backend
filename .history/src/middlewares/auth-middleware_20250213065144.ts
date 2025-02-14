@@ -2,9 +2,8 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import User, { UserDocument } from "../models/user-schema";
 import asyncHandler from "express-async-handler";
-import { decode } from "punycode";
 
-export interface AuthenticatedRequest extends Request {
+interface AuthenticatedRequest extends Request {
   user?: UserDocument;
 }
 
@@ -29,11 +28,10 @@ export const authMiddleware = asyncHandler(
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 
-      const user = await User.findById(decoded.userId);
-      console.log(user);
+      const user = await User.findById(decoded.id);
 
       if (!user) {
-        res.status(404).json({
+        res.json({
           success: false,
           message: "User not found",
         });

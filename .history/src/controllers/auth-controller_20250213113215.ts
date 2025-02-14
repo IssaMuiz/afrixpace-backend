@@ -193,6 +193,7 @@ export const changePassword = asyncHandler(
           message: "Invalid password",
         });
       }
+
       const salt = await bcryptjs.genSalt(12);
 
       const newlyHashedPassword = await bcryptjs.hash(newPassword, salt);
