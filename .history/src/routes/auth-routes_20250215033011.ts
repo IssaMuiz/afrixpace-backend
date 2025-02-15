@@ -19,7 +19,7 @@ router.post("/logout", authMiddleware, logout);
 router.put("/change-password", authMiddleware, changePassword);
 router.put("/profile", authMiddleware, updateUserProfile);
 router.get("/profile", authMiddleware, getUserProfile);
-router.post("/refresh-token", refreshToken);
+router.post("/refresh-token", authMiddleware, refreshToken);
 router.post("/forgot-password", forgotPassword);
 
 export default router;

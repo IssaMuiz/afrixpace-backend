@@ -113,7 +113,7 @@ export const refreshToken = asyncHandler(
 
       const newToken = generateToken(decoded.id);
 
-      res.status(200).json({ success: true, token: newToken });
+      res.json({ success: true, token: newToken });
     } catch (error) {
       console.error("Invalid or expired token", error);
 
