@@ -6,10 +6,9 @@ export interface IPost extends Document {
   content: string;
   category: "Entrepreneur" | "Technology";
   media: {
-    url: string;
+    url: String;
     mediaTypes: "image" | "video";
-    publicId: string;
-  };
+  }[];
   votes: {
     user: mongoose.Types.ObjectId;
     voteTypes: "upvote" | "downvote";
@@ -35,14 +34,17 @@ const PostSchema = new mongoose.Schema<IPost>(
       required: true,
     },
     media: {
-      url: { type: String, required: true },
-      mediaTypes: {
-        type: String,
-        enum: ["image", "video"],
-        required: true,
+      {
+        url: { type: String, required: true },
+        mediaTypes: {
+          type: String,
+          enum: ["image", "video"],
+          required: true,
+        },
+        public_id: { type: String, default: "" },
       },
-      publicId: { type: String, default: "" },
     },
+
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,

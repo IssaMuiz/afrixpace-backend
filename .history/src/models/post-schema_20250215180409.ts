@@ -1,5 +1,6 @@
 import mongoose, { Document } from "mongoose";
 
+interface Media {}
 export interface IPost extends Document {
   user: mongoose.Types.ObjectId;
   title: string;

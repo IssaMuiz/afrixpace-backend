@@ -8,8 +8,8 @@ export interface IPost extends Document {
   media: {
     url: string;
     mediaTypes: "image" | "video";
-    publicId: string;
-  };
+    publicId: stringtring;
+  }[];
   votes: {
     user: mongoose.Types.ObjectId;
     voteTypes: "upvote" | "downvote";

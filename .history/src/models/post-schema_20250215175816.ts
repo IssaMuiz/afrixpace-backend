@@ -9,7 +9,7 @@ export interface IPost extends Document {
     url: string;
     mediaTypes: "image" | "video";
     publicId: string;
-  };
+  }[];
   votes: {
     user: mongoose.Types.ObjectId;
     voteTypes: "upvote" | "downvote";

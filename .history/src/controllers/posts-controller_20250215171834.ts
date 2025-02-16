@@ -1,5 +1,5 @@
 import Post from "../models/post-schema";
-import cloudinary from "../config/cloudinary";
+import User from "../models/user-schema";
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 
@@ -97,11 +97,7 @@ export const updatePost = asyncHandler(
       let mediaUrl: string | null = null;
       let mediaType: string | null = null;
       let publicId: string | null = null;
-
       if (file) {
-        if (post?.media.publicId) {
-          await cloudinary.uploader.destroy(post.media.publicId);
-        }
         if (file.mimetype.startsWith("image/")) {
           mediaType = "image";
         } else if (file.mimetype.startsWith("video/")) {
@@ -150,40 +146,5 @@ export const updatePost = asyncHandler(
 );
 
 export const deletePost = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { postId } = req.params;
-      const userId = req.user!.id;
-
-      const post = await Post.findById(postId);
-
-      if (!post) {
-        res.status(404).json({
-          success: false,
-          message: "Post not found!",
-        });
-      }
-
-      if (post?.user.toString() !== userId) {
-        res.status(400).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
-
-      const deletePost = await Post.findByIdAndDelete(postId);
-
-      if (req.file) {
-        if (post?.media.publicId) {
-          await cloudinary.uploader.destroy(post.media.publicId);
-        }
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Post deleted successfully",
-        deletePost,
-      });
-    } catch (error) {}
-  }
+  async (req: Request, res: Response): Promise<void> => {}
 );

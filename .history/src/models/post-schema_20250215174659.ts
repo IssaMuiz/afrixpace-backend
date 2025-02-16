@@ -6,10 +6,9 @@ export interface IPost extends Document {
   content: string;
   category: "Entrepreneur" | "Technology";
   media: {
-    url: string;
+    url: String;
     mediaTypes: "image" | "video";
-    publicId: string;
-  };
+  }[];
   votes: {
     user: mongoose.Types.ObjectId;
     voteTypes: "upvote" | "downvote";
