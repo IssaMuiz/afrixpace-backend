@@ -1,6 +1,4 @@
 import express from "express";
-import http from "http";
-import { Server } from "socket.io";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -11,7 +9,6 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/auth-routes";
 import postRoutes from "./routes/post-routes";
 import commentRoutes from "./routes/comment-routes";
-import { Socket } from "dgram";
 
 dotenv.config();
 
@@ -25,23 +22,6 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(compression());
 app.use(morgan("dev"));
-
-const server = http.createServer(app);
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("New user connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
-});
 
 //routes
 app.use("/api/auth", authRoutes);

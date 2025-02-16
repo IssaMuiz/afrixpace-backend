@@ -10,8 +10,8 @@ export interface IPost extends Document {
     mediaTypes: "image" | "video";
     publicId: string;
   };
-  upvotes: mongoose.Types.ObjectId[];
-  downvotes: mongoose.Types.ObjectId[];
+  upvotes: mongoose.Types.ObjectId;
+  downvotes: mongoose.Types.ObjectId;
   comments: mongoose.Types.ObjectId[];
   commentCount: number;
   createdAt: Date;

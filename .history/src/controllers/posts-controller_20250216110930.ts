@@ -217,24 +217,8 @@ export const getPostByCategory = asyncHandler(
     const { category } = req.params;
 
     const post = await Post.find({ category })
-      .populate("user", "username image")
-      .populate({
-        path: "comments",
-        populate: {
-          path: "userId",
-          select: "username image",
-        },
-      })
-      .populate({
-        path: "comments",
-        populate: {
-          path: "replies",
-          populate: {
-            path: "userId",
-            select: "username image",
-          },
-        },
-      })
+      .populate("User", "username image")
+      .sort({ createAt: -1 })
       .exec();
 
     res.status(200).json(post);
@@ -255,7 +239,7 @@ export const getFeed = asyncHandler(
     }
 
     const post = await Post.find()
-      .populate("user", "username image")
+      .populate("User", "username image")
       .sort(sortQuery as any)
       .exec();
 

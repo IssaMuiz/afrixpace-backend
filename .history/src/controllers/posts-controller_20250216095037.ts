@@ -212,57 +212,6 @@ export const updatePost = asyncHandler(
   }
 );
 
-export const getPostByCategory = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    const { category } = req.params;
-
-    const post = await Post.find({ category })
-      .populate("user", "username image")
-      .populate({
-        path: "comments",
-        populate: {
-          path: "userId",
-          select: "username image",
-        },
-      })
-      .populate({
-        path: "comments",
-        populate: {
-          path: "replies",
-          populate: {
-            path: "userId",
-            select: "username image",
-          },
-        },
-      })
-      .exec();
-
-    res.status(200).json(post);
-  }
-);
-
-export const getFeed = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    const { sortBy } = req.query as { sortBy?: "recent" | "popular" };
-
-    const sortQuery: Record<string, number> = {};
-
-    if (sortBy === "popular") {
-      sortQuery.commentCount = -1;
-      sortQuery.upvotes = -1;
-    } else {
-      sortQuery.createdAt = -1;
-    }
-
-    const post = await Post.find()
-      .populate("user", "username image")
-      .sort(sortQuery as any)
-      .exec();
-
-    res.status(200).json(post);
-  }
-);
-
 export const deletePost = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {

@@ -10,8 +10,8 @@ export interface IPost extends Document {
     mediaTypes: "image" | "video";
     publicId: string;
   };
-  upvotes: mongoose.Types.ObjectId[];
-  downvotes: mongoose.Types.ObjectId[];
+  upvotes: mongoose.Types.ObjectId
+  downvotes: mongoose.Types.ObjectId 
   comments: mongoose.Types.ObjectId[];
   commentCount: number;
   createdAt: Date;
@@ -52,8 +52,12 @@ const PostSchema = new mongoose.Schema<IPost>(
       type: Number,
       default: 0,
     },
-    upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    upvotes: [
+      {types: mongoose.Schema.Types.ObjectId, ref "User"}
+    ],
+    downvotes: [
+      {types: mongoose.Schema.Types.ObjectId, ref "User"}
+    ],
     category: {
       type: String,
       enum: ["Entrepreneur", "Technology"],
