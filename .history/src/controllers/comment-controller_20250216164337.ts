@@ -3,7 +3,7 @@ import asyncHandler from "express-async-handler";
 import Comment from "../models/comment-schema";
 import Post from "../models/post-schema";
 import io from "../app";
-import mongoose from "mongoose";
+import { ObjectId } from "mongoose";
 
 export const addComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -172,10 +172,11 @@ export const toggleLikeComment = asyncHandler(
 export const replyComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { content, parentCommentId, postId } = req.body;
+      const { commentId } = req.params;
+      const { content } = req.body;
       const userId = req.user?.id;
 
-      const parentComment = await Comment.findById(parentCommentId);
+      const parentComment = await Comment.findById(commentId);
 
       if (!parentComment) {
         res.status(404).json({
@@ -186,15 +187,14 @@ export const replyComment = asyncHandler(
 
       const reply = new Comment({
         userId,
-        postId,
+        postId: parentComment?.postId,
         content,
-        parentComment: parentCommentId,
-        replies: [],
+        parentComment: commentId,
       });
 
       await reply.save();
 
-      parentComment!.replies.push(reply._id as mongoose.Types.ObjectId);
+      parentComment!.replies.push(reply._id);
 
       await parentComment?.save();
 

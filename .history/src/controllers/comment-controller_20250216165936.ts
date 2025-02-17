@@ -186,7 +186,7 @@ export const replyComment = asyncHandler(
 
       const reply = new Comment({
         userId,
-        postId,
+        postId: parentComment?.postId,
         content,
         parentComment: parentCommentId,
         replies: [],

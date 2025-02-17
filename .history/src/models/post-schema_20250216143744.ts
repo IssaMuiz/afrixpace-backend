@@ -12,7 +12,7 @@ export interface IPost extends Document {
   };
   upvotes: mongoose.Types.ObjectId[];
   downvotes: mongoose.Types.ObjectId[];
-  votesCount: number;
+  votesCount: number
   comments: mongoose.Types.ObjectId[];
   commentCount: number;
   createdAt: Date;
@@ -56,8 +56,8 @@ const PostSchema = new mongoose.Schema<IPost>(
     upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     votesCount: {
-      type: Number,
-      default: 0,
+      type : Number
+      default: 0
     },
     category: {
       type: String,

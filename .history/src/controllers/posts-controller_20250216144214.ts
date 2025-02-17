@@ -95,16 +95,11 @@ export const upvotePost = asyncHandler(
 
     await post?.save();
 
-    await Post.findByIdAndUpdate(
-      postId,
-      { $inc: { votesCount: 1 } },
-      { new: true }
-    );
+    await Post.findByIdAndUpdate(postId, { $inc: { votesCount: 1 } });
 
     io.emit("voteUpdates", { postId, upvotes: post?.upvotes.length });
     res.status(200).json({
       success: true,
-      message: "Upvotes a post!",
     });
   }
 );
@@ -132,17 +127,10 @@ export const downvotePost = asyncHandler(
     }
 
     await post?.save();
-
-    await Post.findByIdAndUpdate(
-      postId,
-      { $inc: { votesCount: -1 } },
-      { new: true }
-    );
     io.emit("voteUpdates", { postId, downvotes: post?.downvotes.length });
 
     res.status(200).json({
       success: true,
-      message: "Downvotes a post!",
     });
   }
 );
@@ -232,20 +220,11 @@ export const getPostByCategory = asyncHandler(
 
     const post = await Post.find({ category })
       .populate("user", "username image")
-      .populate("upvotes", "username")
-      .populate("downvotes", "username")
       .populate({
         path: "comments",
         populate: {
           path: "userId",
           select: "username image",
-        },
-      })
-      .populate({
-        path: "comments",
-        populate: {
-          path: "likes",
-          select: "username",
         },
       })
       .populate({

@@ -18,7 +18,7 @@ router.put("/:postId", authMiddleware, upload.single("media"), updatePost);
 router.delete("/:postId", authMiddleware, upload.single("media"), deletePost);
 router.get("/category/:category", getPostByCategory);
 router.get("/feed", getFeed);
-router.put("/:postId/upvotes", authMiddleware, upvotePost);
-router.put("/:postId/downvotes", authMiddleware, downvotePost);
+router.put("/upvotes", authMiddleware, upvotePost);
+router.put("/downvotes", authMiddleware, downvotePost);
 
 export default router;

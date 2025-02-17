@@ -245,7 +245,9 @@ export const getPostByCategory = asyncHandler(
         path: "comments",
         populate: {
           path: "likes",
-          select: "username",
+          populate: {
+            select: "username",
+          },
         },
       })
       .populate({

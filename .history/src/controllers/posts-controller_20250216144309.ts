@@ -104,7 +104,6 @@ export const upvotePost = asyncHandler(
     io.emit("voteUpdates", { postId, upvotes: post?.upvotes.length });
     res.status(200).json({
       success: true,
-      message: "Upvotes a post!",
     });
   }
 );
@@ -142,7 +141,6 @@ export const downvotePost = asyncHandler(
 
     res.status(200).json({
       success: true,
-      message: "Downvotes a post!",
     });
   }
 );
@@ -232,20 +230,11 @@ export const getPostByCategory = asyncHandler(
 
     const post = await Post.find({ category })
       .populate("user", "username image")
-      .populate("upvotes", "username")
-      .populate("downvotes", "username")
       .populate({
         path: "comments",
         populate: {
           path: "userId",
           select: "username image",
-        },
-      })
-      .populate({
-        path: "comments",
-        populate: {
-          path: "likes",
-          select: "username",
         },
       })
       .populate({
