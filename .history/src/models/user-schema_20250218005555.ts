@@ -4,8 +4,8 @@ export interface UserDocument extends Document {
   username: string;
   email: string;
   password: string;
-  followers: mongoose.Types.ObjectId[];
-  following: mongoose.Types.ObjectId[];
+  followers?: mongoose.Types.ObjectId[];
+  following?: mongoose.Types.ObjectId[];
   image?: string;
   bio?: string;
   createdAt: Date;
@@ -27,12 +27,8 @@ const UserSchema = new mongoose.Schema<UserDocument>(
       type: String,
       required: true,
     },
-    followers: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
-    ],
-    following: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] },
-    ],
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     image: {
       type: String,

@@ -259,22 +259,6 @@ export const updateCommentReply = asyncHandler(
       const { content, parentCommentId } = req.body;
       const userId = req.user?.id;
 
-      const comment = await Comment.findById(replyCommentId);
-
-      if (!comment) {
-        res.status(404).json({
-          success: false,
-          message: "Comment can't be found!",
-        });
-      }
-
-      if (comment?.userId.toString() !== userId) {
-        res.status(403).json({
-          success: false,
-          message: "Unauthorized",
-        });
-      }
-
       const updateReplyComment = await Comment.findByIdAndUpdate(
         replyCommentId,
         {
@@ -296,53 +280,6 @@ export const updateCommentReply = asyncHandler(
         success: true,
         updateReplyComment,
       });
-    } catch (error) {
-      console.error("Something went wrong!", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong!",
-      });
-    }
-  }
-);
-
-export const deleteReplyComment = asyncHandler(
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { replyCommentId } = req.params;
-      const userId = req.user?.id;
-
-      const comment = await Comment.findById(replyCommentId);
-
-      if (!comment) {
-        res.status(404).json({
-          success: false,
-          message: "Comment can't be found!",
-        });
-      }
-
-      if (comment?.userId.toString !== userId) {
-        res.status(403).json({
-          success: false,
-          message: "Unauthorized!",
-        });
-      }
-
-      const deleteComment = await Comment.findByIdAndDelete(replyCommentId);
-
-      res.status(200).json({
-        success: true,
-        message: "Comment deleted successfully",
-        deleteComment,
-      });
-    } catch (error) {
-      console.error("Something went wrong!", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong!",
-      });
-    }
+    } catch (error) {}
   }
 );
