@@ -10,8 +10,6 @@ import { Server } from "socket.io";
 export const addComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const io: Server = (req as any).io;
-
       const { postId, content, parentComment } = req.body;
       const userId = req.user?.id;
 
@@ -39,15 +37,6 @@ export const addComment = asyncHandler(
       });
 
       await newComment.save();
-
-      sendNotification(
-        postExists!.user._id,
-        userId,
-        "COMMENT",
-        `${req.user?.username} commented on your post`,
-        io,
-        postId
-      );
 
       await Post.findByIdAndUpdate(
         postId,
@@ -208,7 +197,7 @@ export const toggleLikeComment = asyncHandler(
       await comment?.save();
 
       sendNotification(
-        comment!.userId._id,
+        commentId,
         userId,
         "LIKE",
         `${req.user?.username} liked your comment`,
@@ -234,8 +223,6 @@ export const toggleLikeComment = asyncHandler(
 export const replyComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const io: Server = (req as any).io;
-
       const { content, parentCommentId, postId } = req.body;
       const userId = req.user?.id;
 
@@ -261,14 +248,6 @@ export const replyComment = asyncHandler(
       parentComment!.replies.push(reply._id as mongoose.Types.ObjectId);
 
       await parentComment?.save();
-
-      sendNotification(
-        parentComment!.userId._id,
-        userId,
-        "REPLY",
-        `${req.user?.username} reply your comment`,
-        io
-      );
 
       res.status(200).json({
         success: true,

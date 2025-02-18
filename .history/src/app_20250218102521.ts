@@ -12,7 +12,6 @@ import authRoutes from "./routes/auth-routes";
 import postRoutes from "./routes/post-routes";
 import commentRoutes from "./routes/comment-routes";
 import followRoutes from "./routes/follow-routes";
-import notificationRoutes from "./routes/notification-routes";
 
 dotenv.config();
 
@@ -26,6 +25,10 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(compression());
 app.use(morgan("dev"));
+app.use((req, res, next) => {
+  (req as any).io = io;
+  next();
+});
 
 const server = http.createServer(app);
 
@@ -34,11 +37,6 @@ const io = new Server(server, {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"],
   },
-});
-
-app.use((req, res, next) => {
-  (req as any).io = io;
-  next();
 });
 
 io.on("connection", (socket) => {
@@ -54,7 +52,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/", followRoutes);
-app.use("/api/notification", notificationRoutes);
 
 //Global error handler
 

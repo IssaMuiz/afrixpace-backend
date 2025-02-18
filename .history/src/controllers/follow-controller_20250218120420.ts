@@ -149,7 +149,7 @@ export const unFollowUser = asyncHandler(
       await userToUnfollow?.save();
 
       sendNotification(
-        userToUnfollow?._id as mongoose.Types.ObjectId,
+        unFollowId,
         userId,
         "UNFOLLOW",
         `${user?.username} unfollow you`,

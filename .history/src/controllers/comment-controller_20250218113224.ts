@@ -262,14 +262,6 @@ export const replyComment = asyncHandler(
 
       await parentComment?.save();
 
-      sendNotification(
-        parentComment!.userId._id,
-        userId,
-        "REPLY",
-        `${req.user?.username} reply your comment`,
-        io
-      );
-
       res.status(200).json({
         success: true,
         reply,

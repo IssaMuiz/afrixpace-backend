@@ -12,7 +12,6 @@ import authRoutes from "./routes/auth-routes";
 import postRoutes from "./routes/post-routes";
 import commentRoutes from "./routes/comment-routes";
 import followRoutes from "./routes/follow-routes";
-import notificationRoutes from "./routes/notification-routes";
 
 dotenv.config();
 
@@ -54,7 +53,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/comment", commentRoutes);
 app.use("/api/", followRoutes);
-app.use("/api/notification", notificationRoutes);
 
 //Global error handler
 
