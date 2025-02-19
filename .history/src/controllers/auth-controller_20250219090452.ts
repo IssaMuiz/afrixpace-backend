@@ -62,33 +62,14 @@ export const login = asyncHandler(
         });
       }
 
-      req.session.user = {
-        id: user?._id.toString() || "",
-        email: user?.email || "",
-      };
-
-      const token = jwt.sign(
-        {
-          userId: user?._id,
-        },
-        process.env.JWT_SECRET_KEY as string,
-        {
-          expiresIn: "1d",
-        }
-      );
-
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 1000 * 60 * 60 * 24,
-      });
-
       res.status(200).json({
         success: true,
-        message: "User log in successfully!",
-        user: req.session.user,
-        token,
+        message: "User login successfully!",
+        _id: user?.id,
+        username: user?.username,
+        email: user?.email,
+        password: user?.password,
+        token: generateToken(user?._id),
       });
     } catch (error) {
       console.error("Internal server error", error);
@@ -103,34 +84,31 @@ export const login = asyncHandler(
 
 export const logout = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    req.session.destroy((err) => {
-      if (err) return;
+    const user = await User.findById(req.user!.id);
 
-      res.status(500).json({
+    if (!user) {
+      res.status(404).json({
         success: false,
-        message: "Logout failed",
+        message: "User not found",
       });
-    });
-
-    res.clearCookie("token");
-    res.status(200).json({
-      success: true,
-      message: "Logged out successfully",
-    });
+    }
+    res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully", user });
   }
 );
 
 export const refreshToken = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const { token } = req.body;
 
-      if (!refreshToken) {
+      if (!token) {
         res.status(404).json({ success: true, message: "No token provided" });
       }
 
       const decoded = jwt.verify(
-        refreshToken,
+        token,
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 

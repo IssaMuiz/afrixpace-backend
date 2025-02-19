@@ -58,7 +58,7 @@ export const createPost = asyncHandler(
 
       await createPost.save();
 
-      /*  await redis.del("posts"); */
+      await redis.del("posts");
 
       res.status(200).json({
         success: true,

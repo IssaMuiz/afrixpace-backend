@@ -72,7 +72,7 @@ const PostSchema = new mongoose.Schema<IPost>(
 
 PostSchema.index({ user: 1 });
 PostSchema.index({ category: 1 });
-PostSchema.index({ createdAt: -1 });
+PostSchema.index({ createdAt: 1 });
 
 const model = mongoose.model<IPost>("Post", PostSchema);
 

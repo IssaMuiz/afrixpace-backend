@@ -17,8 +17,8 @@ const router = express.Router();
 router.post(
   "/create-post",
   authMiddleware,
-  upload.single("media"),
   validatePost,
+  upload.single("media"),
   createPost
 );
 router.put("/:postId", authMiddleware, upload.single("media"), updatePost);

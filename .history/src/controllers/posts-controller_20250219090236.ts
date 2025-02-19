@@ -3,8 +3,8 @@ import cloudinary from "../config/cloudinary";
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Server } from "socket.io";
-/* import redis from "../config/redis";
- */ import { sendNotification } from "../utils/notification-helper";
+import redis from "../config/redis";
+import { sendNotification } from "../utils/notification-helper";
 import mongoose from "mongoose";
 
 export const createPost = asyncHandler(
@@ -58,7 +58,7 @@ export const createPost = asyncHandler(
 
       await createPost.save();
 
-      /*  await redis.del("posts"); */
+      await redis.del("posts");
 
       res.status(200).json({
         success: true,
@@ -258,13 +258,13 @@ export const getPostByCategory = asyncHandler(
     try {
       const cacheKey = "posts";
 
-      /* const cahchedPosts = await redis.get(cacheKey); */
+      const cahchedPosts = await redis.get(cacheKey);
 
-      /*  if (cacheKey) {
+      if (cacheKey) {
         res
           .status(200)
           .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
+      }
 
       const { category, lastPostId, limit } = req.query;
 
@@ -338,13 +338,13 @@ export const getFeed = asyncHandler(
     try {
       const cacheKey = "posts";
 
-      /* const cahchedPosts = await redis.get(cacheKey); */
+      const cahchedPosts = await redis.get(cacheKey);
 
-      /* if (cacheKey) {
+      if (cacheKey) {
         res
           .status(200)
           .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
+      }
       const { sortBy, lastPostId, limit } = req.query;
 
       const postsLimit = parseInt(limit as string) || 10;

@@ -29,6 +29,7 @@ const PostSchema = new mongoose.Schema<IPost>(
     title: {
       type: String,
       required: true,
+      index: true,
     },
     content: {
       type: String,
@@ -69,10 +70,6 @@ const PostSchema = new mongoose.Schema<IPost>(
   },
   { timestamps: true }
 );
-
-PostSchema.index({ user: 1 });
-PostSchema.index({ category: 1 });
-PostSchema.index({ createdAt: -1 });
 
 const model = mongoose.model<IPost>("Post", PostSchema);
 

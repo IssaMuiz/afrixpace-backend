@@ -62,10 +62,7 @@ export const login = asyncHandler(
         });
       }
 
-      req.session.user = {
-        id: user?._id.toString() || "",
-        email: user?.email || "",
-      };
+      req.session.user = { id: user?._id, email: user?.email };
 
       const token = jwt.sign(
         {
@@ -86,8 +83,11 @@ export const login = asyncHandler(
 
       res.status(200).json({
         success: true,
-        message: "User log in successfully!",
-        user: req.session.user,
+        message: "User login successfully!",
+        _id: user?.id,
+        username: user?.username,
+        email: user?.email,
+        password: user?.password,
         token,
       });
     } catch (error) {
@@ -123,14 +123,14 @@ export const logout = asyncHandler(
 export const refreshToken = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const { token } = req.body;
 
-      if (!refreshToken) {
+      if (!token) {
         res.status(404).json({ success: true, message: "No token provided" });
       }
 
       const decoded = jwt.verify(
-        refreshToken,
+        token,
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 

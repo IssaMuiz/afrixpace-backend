@@ -8,8 +8,6 @@ import dotenv from "dotenv";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/db";
-import MongoStore from "connect-mongo";
-import session from "express-session";
 import authRoutes from "./routes/auth-routes";
 import postRoutes from "./routes/post-routes";
 import commentRoutes from "./routes/comment-routes";
@@ -53,27 +51,7 @@ io.on("connection", (socket) => {
   });
 });
 
-//secure session Middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET!,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      collectionName: "sessions",
-    }),
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  })
-);
-
 app.use("/api", apiLimiter);
-
 //routes
 app.use("/api/auth", authRoutes);
 app.use("/api/post", postRoutes);

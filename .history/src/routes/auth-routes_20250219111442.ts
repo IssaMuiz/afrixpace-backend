@@ -10,11 +10,10 @@ import {
   getUserProfile,
   forgotPassword,
 } from "../controllers/auth-controller";
-import { validateUserInput } from "../middlewares/validation";
 
 const router = express.Router();
 
-router.post("/register", validateUserInput, register);
+router.post("/register", register);
 router.post("/login", login);
 router.get("/dashboard", authMiddleware, (req, res) => {
   res.json({ message: "Welcome to your dashboard", user: req.session.user });

@@ -2,10 +2,9 @@ import Post from "../models/post-schema";
 import cloudinary from "../config/cloudinary";
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
+import io from "../app";
 import { Server } from "socket.io";
-/* import redis from "../config/redis";
- */ import { sendNotification } from "../utils/notification-helper";
-import mongoose from "mongoose";
+import { sendNotification } from "../utils/notification-helper";
 
 export const createPost = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -57,8 +56,6 @@ export const createPost = asyncHandler(
       });
 
       await createPost.save();
-
-      /*  await redis.del("posts"); */
 
       res.status(200).json({
         success: true,
@@ -255,136 +252,79 @@ export const updatePost = asyncHandler(
 
 export const getPostByCategory = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    try {
-      const cacheKey = "posts";
+    const { category } = req.params;
 
-      /* const cahchedPosts = await redis.get(cacheKey); */
+    const { lastPostId, limit } = req.query;
 
-      /*  if (cacheKey) {
-        res
-          .status(200)
-          .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
+    const postsLimit = parseInt(limit as string) || 10;
 
-      const { category, lastPostId, limit } = req.query;
+    let query = {};
+    if (lastPostId) {
+      query = { _id: { $lt: lastPostId } };
+    }
 
-      const postsLimit = parseInt(limit as string) || 10;
-
-      if (!category || typeof category !== "string") {
-        res.status(400).json({
-          success: false,
-          message: "Category is required!",
-        });
-      }
-
-      let query: Record<string, any> = { category };
-
-      if (lastPostId && mongoose.Types.ObjectId.isValid(lastPostId as string)) {
-        query._id = { $lt: new mongoose.Types.ObjectId(lastPostId as string) };
-      }
-
-      const posts = await Post.find(query)
-        .sort({ createdAt: -1 })
-        .limit(postsLimit)
-        .populate("user", "username image")
-        .populate("upvotes", "username")
-        .populate("downvotes", "username")
-        .populate({
-          path: "comments",
+    const post = await Post.find({ category })
+      .populate("user", "username image")
+      .populate("upvotes", "username")
+      .populate("downvotes", "username")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "username image",
+        },
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "likes",
+          select: "username",
+        },
+      })
+      .populate({
+        path: "comments",
+        populate: {
+          path: "replies",
           populate: {
             path: "userId",
             select: "username image",
           },
-        })
-        .populate({
-          path: "comments",
-          populate: {
-            path: "likes",
-            select: "username",
-          },
-        })
-        .populate({
-          path: "comments",
-          populate: {
-            path: "replies",
-            populate: {
-              path: "userId",
-              select: "username image",
-            },
-          },
-        });
+        },
+      })
+      .exec();
 
-      /* await redis.setex(cacheKey, 300, JSON.stringify(posts)); */
-
-      res.status(200).json({
-        success: true,
-        nextCursor: posts.length ? posts[posts.length - 1]._id : null,
-        fromCache: false,
-        data: posts,
-      });
-    } catch (error) {
-      console.error("Error fetching posts", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong!",
-      });
-    }
+    res.status(200).json(post);
   }
 );
 
 export const getFeed = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    try {
-      const cacheKey = "posts";
+    const { sortBy, lastPostId, limit } = req.query;
 
-      /* const cahchedPosts = await redis.get(cacheKey); */
+    const postsLimit = parseInt(limit as string) || 10;
 
-      /* if (cacheKey) {
-        res
-          .status(200)
-          .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
-      const { sortBy, lastPostId, limit } = req.query;
-
-      const postsLimit = parseInt(limit as string) || 10;
-
-      let query = {};
-      if (lastPostId) {
-        query = { _id: { $lt: lastPostId } };
-      }
-
-      let sortQuery: Record<string, number> = { createdAt: -1 };
-
-      if (sortBy === "popular") {
-        sortQuery = { commentCount: -1 };
-        sortQuery = { upvotes: -1 };
-      } else {
-        sortQuery.createdAt = -1;
-      }
-
-      const posts = await Post.find(query)
-        .sort(sortQuery as any)
-        .limit(postsLimit)
-        .populate("user", "username image")
-        .populate("comments", "userId content");
-
-      /* await redis.setex(cacheKey, 300, JSON.stringify(posts)); */
-
-      res.status(200).json({
-        success: true,
-        nextCursor: posts.length ? posts[posts.length - 1]._id : null,
-        fromCache: false,
-        data: posts,
-      });
-    } catch (error) {
-      console.error("Error fetching posts", error);
-
-      res.status(500).json({
-        success: false,
-        message: "Something went wrong!",
-      });
+    let query = {};
+    if (lastPostId) {
+      query = { _id: { $lt: lastPostId } };
     }
+
+    let sortQuery: Record<string, number> = { createdAt: -1 };
+
+    if (sortBy === "popular") {
+      sortQuery = { commentCount: -1 };
+      sortQuery = { upvotes: -1 };
+    } else {
+      sortQuery.createdAt = -1;
+    }
+
+    const post = await Post.find(query)
+      .sort(sortQuery as any)
+      .limit(postsLimit)
+      .populate("user", "username image")
+
+      .exec();
+
+    res.status(200).json(post);
   }
 );
 

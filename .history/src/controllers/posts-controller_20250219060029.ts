@@ -2,9 +2,9 @@ import Post from "../models/post-schema";
 import cloudinary from "../config/cloudinary";
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
+import io from "../app";
 import { Server } from "socket.io";
-/* import redis from "../config/redis";
- */ import { sendNotification } from "../utils/notification-helper";
+import { sendNotification } from "../utils/notification-helper";
 import mongoose from "mongoose";
 
 export const createPost = asyncHandler(
@@ -57,8 +57,6 @@ export const createPost = asyncHandler(
       });
 
       await createPost.save();
-
-      /*  await redis.del("posts"); */
 
       res.status(200).json({
         success: true,
@@ -256,16 +254,6 @@ export const updatePost = asyncHandler(
 export const getPostByCategory = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const cacheKey = "posts";
-
-      /* const cahchedPosts = await redis.get(cacheKey); */
-
-      /*  if (cacheKey) {
-        res
-          .status(200)
-          .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
-
       const { category, lastPostId, limit } = req.query;
 
       const postsLimit = parseInt(limit as string) || 10;
@@ -283,7 +271,7 @@ export const getPostByCategory = asyncHandler(
         query._id = { $lt: new mongoose.Types.ObjectId(lastPostId as string) };
       }
 
-      const posts = await Post.find(query)
+      const post = await Post.find(query)
         .sort({ createdAt: -1 })
         .limit(postsLimit)
         .populate("user", "username image")
@@ -314,13 +302,10 @@ export const getPostByCategory = asyncHandler(
           },
         });
 
-      /* await redis.setex(cacheKey, 300, JSON.stringify(posts)); */
-
       res.status(200).json({
         success: true,
-        nextCursor: posts.length ? posts[posts.length - 1]._id : null,
-        fromCache: false,
-        data: posts,
+        nextCursor: post.length ? post[post.length - 1]._id : null,
+        data: post,
       });
     } catch (error) {
       console.error("Error fetching posts", error);
@@ -336,15 +321,6 @@ export const getPostByCategory = asyncHandler(
 export const getFeed = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const cacheKey = "posts";
-
-      /* const cahchedPosts = await redis.get(cacheKey); */
-
-      /* if (cacheKey) {
-        res
-          .status(200)
-          .json({ fromCache: true, posts: JSON.parse(cahchedPosts!) });
-      } */
       const { sortBy, lastPostId, limit } = req.query;
 
       const postsLimit = parseInt(limit as string) || 10;
@@ -363,19 +339,16 @@ export const getFeed = asyncHandler(
         sortQuery.createdAt = -1;
       }
 
-      const posts = await Post.find(query)
+      const post = await Post.find(query)
         .sort(sortQuery as any)
         .limit(postsLimit)
         .populate("user", "username image")
         .populate("comments", "userId content");
 
-      /* await redis.setex(cacheKey, 300, JSON.stringify(posts)); */
-
       res.status(200).json({
         success: true,
-        nextCursor: posts.length ? posts[posts.length - 1]._id : null,
-        fromCache: false,
-        data: posts,
+        nextCursor: post.length ? post[post.length - 1]._id : null,
+        data: post,
       });
     } catch (error) {
       console.error("Error fetching posts", error);

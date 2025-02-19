@@ -1,7 +1,6 @@
 import mongoose, { Document } from "mongoose";
 
 export interface UserDocument extends Document {
-  _id: mongoose.Types.ObjectId;
   username: string;
   email: string;
   password: string;
@@ -45,6 +44,7 @@ const UserSchema = new mongoose.Schema<UserDocument>(
   { timestamps: true }
 );
 
+UserSchema.index({ username: 1 });
 UserSchema.index({ image: 1 });
 
 const model = mongoose.model<UserDocument>("User", UserSchema);

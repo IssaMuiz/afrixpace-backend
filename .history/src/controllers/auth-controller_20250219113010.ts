@@ -86,7 +86,7 @@ export const login = asyncHandler(
 
       res.status(200).json({
         success: true,
-        message: "User log in successfully!",
+        message: "User login successfully!",
         user: req.session.user,
         token,
       });
@@ -123,14 +123,14 @@ export const logout = asyncHandler(
 export const refreshToken = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const { token } = req.body;
 
-      if (!refreshToken) {
+      if (!token) {
         res.status(404).json({ success: true, message: "No token provided" });
       }
 
       const decoded = jwt.verify(
-        refreshToken,
+        token,
         process.env.JWT_SECRET_KEY!
       ) as JwtPayload;
 
