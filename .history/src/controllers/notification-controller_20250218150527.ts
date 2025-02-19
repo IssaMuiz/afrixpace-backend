@@ -13,7 +13,7 @@ export const getUserNotifications = asyncHandler(
           message: "Unauthorized",
         });
       }
-      const notification = await Notification.find({ recipient: userId })
+      const notification = await Notification.find({})
         .populate("sender", "username image")
         .sort({ createdAt: -1 });
 

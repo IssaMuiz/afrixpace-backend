@@ -17,7 +17,6 @@ export const getUserNotifications = asyncHandler(
         .populate("sender", "username image")
         .sort({ createdAt: -1 });
 
-      console.log("Retrieved notification", notification);
       res.status(200).json(notification);
     } catch (error) {
       console.error("Something went wrong!", error);

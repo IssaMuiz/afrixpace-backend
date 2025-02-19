@@ -1,6 +1,7 @@
 import Notification from "../models/notification-schema";
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 
 export const getUserNotifications = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -13,9 +14,13 @@ export const getUserNotifications = asyncHandler(
           message: "Unauthorized",
         });
       }
-      const notification = await Notification.find({ recipient: userId })
+
+      const newReceipient = new mongoose.Types.ObjectId(userId.toString());
+      console.log(newReceipient);
+
+      const notification = await Notification.findById(userId)
         .populate("sender", "username image")
-        .sort({ createdAt: -1 });
+        .sort({ createAt: -1 });
 
       console.log("Retrieved notification", notification);
       res.status(200).json(notification);

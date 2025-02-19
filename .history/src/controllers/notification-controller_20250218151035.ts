@@ -1,6 +1,7 @@
 import Notification from "../models/notification-schema";
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
+import { populate } from "dotenv";
 
 export const getUserNotifications = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -13,7 +14,9 @@ export const getUserNotifications = asyncHandler(
           message: "Unauthorized",
         });
       }
-      const notification = await Notification.find({ recipient: userId })
+      const notification = await Notification.find({})
+        .populate("sender", "username image")
+        .sort({ createAt: -1 })
         .populate("sender", "username image")
         .sort({ createdAt: -1 });
 
