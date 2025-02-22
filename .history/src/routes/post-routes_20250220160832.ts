@@ -23,8 +23,8 @@ router.post(
 );
 router.put("/:postId", authMiddleware, upload.single("media"), updatePost);
 router.delete("/:postId", authMiddleware, upload.single("media"), deletePost);
-router.get("/category", authMiddleware, getPostByCategory);
-router.get("/feed", authMiddleware, getFeed);
+router.get("/category", getPostByCategory);
+router.get("/feed", getFeed);
 router.put("/:postId/upvotes", authMiddleware, upvotePost);
 router.put("/:postId/downvotes", authMiddleware, downvotePost);
 

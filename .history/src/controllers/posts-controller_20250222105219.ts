@@ -175,7 +175,7 @@ export const downvotePost = asyncHandler(
         await Post.findByIdAndUpdate(postId, {
           $pull: { upvotes: userId },
           $addToSet: { downvotes: userId },
-          $inc: { votesCount: alreadyUpvoted ? -2 : -1 },
+          $inc: { votesCount: alreadyDownvoted ? -2 : -1 },
         });
         voteChange = alreadyUpvoted ? -2 : -1;
       }

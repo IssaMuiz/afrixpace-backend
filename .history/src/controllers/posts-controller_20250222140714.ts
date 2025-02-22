@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 /* import redis from "../config/redis";
  */ import { sendNotification } from "../utils/notification-helper";
 import mongoose from "mongoose";
+import { PerformanceObserverEntryList } from "perf_hooks";
 
 export const createPost = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -175,7 +176,7 @@ export const downvotePost = asyncHandler(
         await Post.findByIdAndUpdate(postId, {
           $pull: { upvotes: userId },
           $addToSet: { downvotes: userId },
-          $inc: { votesCount: alreadyUpvoted ? -2 : -1 },
+          $inc: { votesCount: alreadyDownvoted ? -2 : -1 },
         });
         voteChange = alreadyUpvoted ? -2 : -1;
       }
@@ -371,6 +372,7 @@ export const getPostByCategory = asyncHandler(
 export const getFeed = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
+      const userId = req.user?.id;
       const cacheKey = "posts";
 
       /* const cahchedPosts = await redis.get(cacheKey); */
@@ -406,11 +408,28 @@ export const getFeed = asyncHandler(
 
       /* await redis.setex(cacheKey, 300, JSON.stringify(posts)); */
 
+      const formattedPost = posts.map((post) => ({
+        _id: post._id,
+        username: req.user
+                content: post.content,
+        votesCount: post.votesCount || 0,
+
+        userVote: post.upvotes.includes(userId)
+          ? "upvotes"
+          : post.downvotes.includes(userId)
+          ? "downvotes"
+          : null,
+      }));
+
+      
+
       res.status(200).json({
         success: true,
-        nextCursor: posts.length ? posts[posts.length - 1]._id : null,
+        nextCursor: formattedPost.length
+          ? formattedPost[formattedPost.length - 1]._id
+          : null,
         fromCache: false,
-        data: posts,
+        data: formattedPost,
       });
     } catch (error) {
       console.error("Error fetching posts", error);

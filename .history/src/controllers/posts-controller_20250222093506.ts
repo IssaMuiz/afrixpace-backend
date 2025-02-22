@@ -77,43 +77,34 @@ export const createPost = asyncHandler(
 );
 
 export const upvotePost = asyncHandler(
+  
   async (req: Request, res: Response): Promise<void> => {
+
     try {
       const io: Server = (req as any).io;
 
       const { postId } = req.params;
       const userId = req.user?.id;
-
+  
       const post = await Post.findById(postId);
-
+  
       if (!post) {
         res.status(404).json({
           success: false,
           message: "Post not found",
         });
       }
-
-      const alreadyUpvoted = post?.upvotes.includes(userId);
-      const alreadyDownvoted = post?.downvotes.includes(userId);
-
-      let voteChange = 0;
-
-      if (alreadyUpvoted) {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { upvotes: userId },
-          $inc: { votesCount: -1 },
-        });
-
-        voteChange = -1;
+  
+      post!.downvotes = post!.downvotes.filter((id) => id.toString() !== userId);
+  
+      if (post?.upvotes.includes(userId)) {
+        post.upvotes = post.upvotes.filter((id) => id.toString() !== userId);
       } else {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { downvotes: userId },
-          $addToSet: { upvotes: userId },
-          $inc: { votesCount: alreadyDownvoted ? 2 : 1 },
-        });
-        voteChange = alreadyDownvoted ? 2 : 1;
+        post?.upvotes.push(userId);
       }
-
+  
+      await post?.save();
+  
       sendNotification(
         post!.user?._id,
         userId,
@@ -122,14 +113,17 @@ export const upvotePost = asyncHandler(
         io,
         postId
       );
-
-      const updatedPost = await Post.findById(postId);
-
+  
+      await Post.findByIdAndUpdate(
+        postId,
+        { $inc: { votesCount: 1 } },
+        { new: true }
+      );
+  
       io.emit("voteUpdates", { postId, upvotes: post?.upvotes.length });
       res.status(200).json({
         success: true,
         message: "Upvotes a post!",
-        votesCount: updatedPost?.votesCount,
       });
     } catch (error) {
       console.error("Something went wrong", error);
@@ -137,8 +131,9 @@ export const upvotePost = asyncHandler(
       res.status(500).json({
         success: false,
         message: "Something went wrong",
-      });
+      })
     }
+    
   }
 );
 
@@ -147,65 +142,57 @@ export const downvotePost = asyncHandler(
     try {
       const io: Server = (req as any).io;
 
-      const { postId } = req.params;
-      const userId = req.user?.id;
+    const { postId } = req.params;
+    const userId = req.user?.id;
 
-      const post = await Post.findById(postId);
+    const post = await Post.findById(postId);
 
-      if (!post) {
-        res.status(404).json({
-          success: false,
-          message: "Post not found",
-        });
-      }
-
-      const alreadyUpvoted = post?.upvotes.includes(userId);
-      const alreadyDownvoted = post?.downvotes.includes(userId);
-
-      let voteChange = 0;
-
-      if (alreadyDownvoted) {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { downvotes: userId },
-          $inc: { votesCount: 1 },
-        });
-
-        voteChange = 1;
-      } else {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { upvotes: userId },
-          $addToSet: { downvotes: userId },
-          $inc: { votesCount: alreadyUpvoted ? -2 : -1 },
-        });
-        voteChange = alreadyUpvoted ? -2 : -1;
-      }
-
-      sendNotification(
-        post!.user?._id,
-        userId,
-        "DOWNVOTE",
-        `${req.user?.username} downvoted your post`,
-        io,
-        postId
-      );
-
-      const updatedPost = await Post.findById(postId);
-
-      io.emit("voteUpdates", { postId, downvotes: post?.downvotes.length });
-
-      res.status(200).json({
-        success: true,
-        message: "Downvotes a post!",
-        votesCount: updatedPost?.votesCount,
+    if (!post) {
+      res.status(404).json({
+        success: false,
+        message: "Post not found",
       });
+    }
+
+    post!.upvotes = post!.upvotes.filter((id) => id.toString() !== userId);
+
+    if (post?.downvotes.includes(userId)) {
+      post.downvotes = post.downvotes.filter((id) => id.toString() !== userId);
+    } else {
+      post?.downvotes.push(userId);
+    }
+
+    await post?.save();
+
+    sendNotification(
+      post!.user?._id,
+      userId,
+      "DOWNVOTE",
+      `${req.user?.username} downvoted your post`,
+      io,
+      postId
+    );
+
+    await Post.findByIdAndUpdate(
+      postId,
+      { $inc: { votesCount: -1 } },
+      { new: true }
+    );
+    io.emit("voteUpdates", { postId, downvotes: post?.downvotes.length });
+
+    res.status(200).json({
+      success: true,
+      message: "Downvotes a post!",
+    });
     } catch (error) {
       console.error("Something went wrong", error);
 
       res.status(500).json({
         success: false,
         message: "Something went wrong",
-      });
+      })
     }
+    
   }
 );
 

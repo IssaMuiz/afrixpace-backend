@@ -175,7 +175,7 @@ export const downvotePost = asyncHandler(
         await Post.findByIdAndUpdate(postId, {
           $pull: { upvotes: userId },
           $addToSet: { downvotes: userId },
-          $inc: { votesCount: alreadyUpvoted ? -2 : -1 },
+          $inc: { votesCount: alreadyDownvoted ? -2 : -1 },
         });
         voteChange = alreadyUpvoted ? -2 : -1;
       }
@@ -371,6 +371,7 @@ export const getPostByCategory = asyncHandler(
 export const getFeed = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
+      const userId = req.user?.id;
       const cacheKey = "posts";
 
       /* const cahchedPosts = await redis.get(cacheKey); */

@@ -14,17 +14,11 @@ import { validatePost } from "../middlewares/validation";
 
 const router = express.Router();
 
-router.post(
-  "/create-post",
-  authMiddleware,
-  upload.single("media"),
-  validatePost,
-  createPost
-);
+router.post("/create-post", authMiddleware, upload.single("media"), createPost);
 router.put("/:postId", authMiddleware, upload.single("media"), updatePost);
 router.delete("/:postId", authMiddleware, upload.single("media"), deletePost);
-router.get("/category", authMiddleware, getPostByCategory);
-router.get("/feed", authMiddleware, getFeed);
+router.get("/category", getPostByCategory);
+router.get("/feed", getFeed);
 router.put("/:postId/upvotes", authMiddleware, upvotePost);
 router.put("/:postId/downvotes", authMiddleware, downvotePost);
 

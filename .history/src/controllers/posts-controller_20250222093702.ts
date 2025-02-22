@@ -93,26 +93,17 @@ export const upvotePost = asyncHandler(
         });
       }
 
-      const alreadyUpvoted = post?.upvotes.includes(userId);
-      const alreadyDownvoted = post?.downvotes.includes(userId);
+      post!.downvotes = post!.downvotes.filter(
+        (id) => id.toString() !== userId
+      );
 
-      let voteChange = 0;
-
-      if (alreadyUpvoted) {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { upvotes: userId },
-          $inc: { votesCount: -1 },
-        });
-
-        voteChange = -1;
+      if (post?.upvotes.includes(userId)) {
+        post.upvotes = post.upvotes.filter((id) => id.toString() !== userId);
       } else {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { downvotes: userId },
-          $addToSet: { upvotes: userId },
-          $inc: { votesCount: alreadyDownvoted ? 2 : 1 },
-        });
-        voteChange = alreadyDownvoted ? 2 : 1;
+        post?.upvotes.push(userId);
       }
+
+      await post?.save();
 
       sendNotification(
         post!.user?._id,
@@ -123,13 +114,16 @@ export const upvotePost = asyncHandler(
         postId
       );
 
-      const updatedPost = await Post.findById(postId);
+      await Post.findByIdAndUpdate(
+        postId,
+        { $inc: { votesCount: 1 } },
+        { new: true }
+      );
 
       io.emit("voteUpdates", { postId, upvotes: post?.upvotes.length });
       res.status(200).json({
         success: true,
         message: "Upvotes a post!",
-        votesCount: updatedPost?.votesCount,
       });
     } catch (error) {
       console.error("Something went wrong", error);
@@ -159,26 +153,17 @@ export const downvotePost = asyncHandler(
         });
       }
 
-      const alreadyUpvoted = post?.upvotes.includes(userId);
-      const alreadyDownvoted = post?.downvotes.includes(userId);
+      post!.upvotes = post!.upvotes.filter((id) => id.toString() !== userId);
 
-      let voteChange = 0;
-
-      if (alreadyDownvoted) {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { downvotes: userId },
-          $inc: { votesCount: 1 },
-        });
-
-        voteChange = 1;
+      if (post?.downvotes.includes(userId)) {
+        post.downvotes = post.downvotes.filter(
+          (id) => id.toString() !== userId
+        );
       } else {
-        await Post.findByIdAndUpdate(postId, {
-          $pull: { upvotes: userId },
-          $addToSet: { downvotes: userId },
-          $inc: { votesCount: alreadyUpvoted ? -2 : -1 },
-        });
-        voteChange = alreadyUpvoted ? -2 : -1;
+        post?.downvotes.push(userId);
       }
+
+      await post?.save();
 
       sendNotification(
         post!.user?._id,
@@ -189,14 +174,16 @@ export const downvotePost = asyncHandler(
         postId
       );
 
-      const updatedPost = await Post.findById(postId);
-
+      await Post.findByIdAndUpdate(
+        postId,
+        { $inc: { votesCount: -1 } },
+        { new: true }
+      );
       io.emit("voteUpdates", { postId, downvotes: post?.downvotes.length });
 
       res.status(200).json({
         success: true,
         message: "Downvotes a post!",
-        votesCount: updatedPost?.votesCount,
       });
     } catch (error) {
       console.error("Something went wrong", error);
