@@ -78,14 +78,14 @@ export const getComments = asyncHandler(
       const { postId } = req.params;
 
       const limit = parseInt(req.query.limit as string) || 10;
-      const skip = parseInt(req.query.skip as string) || 0;
+      const skip = parseInt(req.query.skip as string) || 10;
 
       const comments = await Comment.find({ postId })
-        .sort({ _id: 1 })
-        .limit(limit)
-        .skip(skip)
         .populate("userId", "username image")
-        .populate({ path: "parentComment", select: "content userId" });
+        .populate({ path: "parentComment", select: "content userId" })
+        .sort({ createdAt: 1 })
+        .limit(limit)
+        .skip(skip);
 
       res.status(200).json({
         success: true,
