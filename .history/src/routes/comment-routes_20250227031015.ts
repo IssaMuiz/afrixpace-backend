@@ -13,7 +13,7 @@ import { authMiddleware } from "../middlewares/auth-middleware";
 const router = express.Router();
 
 router.post("/", authMiddleware, addComment);
-router.post("/:postId/reply", authMiddleware, replyComment);
+router.post("/reply", authMiddleware, replyComment);
 router.get("/:postId", authMiddleware, getComments);
 router.delete("/:commentId", authMiddleware, deleteComment);
 router.put("/:commentId/like", authMiddleware, toggleLikeComment);

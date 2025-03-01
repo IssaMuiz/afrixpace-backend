@@ -82,21 +82,44 @@ export const getComments = asyncHandler(
       const skip = parseInt(req.query.skip as string) || 0;
 
       const comments = await Comment.find({ postId })
+        .sort({ _id: 1 })
+        .limit(limit)
+        .skip(skip)
         .populate("userId", "username image")
+        .populate({ path: "parentComment", model: "Comment" })
         .populate({
           path: "replies",
           populate: { path: "userId", select: "username image" },
         })
-        .sort({ _id: 1 })
-        .limit(limit)
-        .skip(skip)
         .exec();
 
       console.log("Api comment fetching", JSON.stringify(comments, null, 2));
 
+      const commentMap: Record<string, any> = {};
+      const topLevelComment: any[] = [];
+
+      comments.forEach((comment) => {
+        const commentId = comment._id!.toString();
+        comment.replies = [];
+
+        commentMap[commentId] = comment;
+      });
+
+      comments.forEach((comment) => {
+        if (comment.parentComment) {
+          const parentId = comment.parentComment.toString();
+
+          if (commentMap[parentId]) {
+            commentMap[parentId].replies.push(comment);
+          }
+        } else {
+          topLevelComment.push(comment);
+        }
+      });
+
       res.status(200).json({
         success: true,
-        comments,
+        comments: topLevelComment,
       });
     } catch (error) {
       console.error("Something went wrong!", error);
@@ -280,16 +303,9 @@ export const replyComment = asyncHandler(
 
       await reply.save();
 
-      await Comment.findByIdAndUpdate(
-        parentCommentId,
-        {
-          $push: { replies: reply._id },
-        },
-        { new: true }
-      );
-
-      const populatedReply = await reply.populate("userId", "username image");
-
+      await Comment.findByIdAndUpdate(parentCommentId, {
+        $push: { replies: reply._id },
+      });
       sendNotification(
         parent!.userId._id,
         userId,
@@ -297,6 +313,10 @@ export const replyComment = asyncHandler(
         `${req.user?.username} reply your comment`,
         io
       );
+
+      const parentComment = await Comment.findById(req.body.parentCommentId);
+
+      console.log("parent comment replies", parentComment?.replies);
 
       res.status(200).json({
         success: true,

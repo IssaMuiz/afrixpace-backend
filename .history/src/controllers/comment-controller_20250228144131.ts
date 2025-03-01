@@ -82,21 +82,45 @@ export const getComments = asyncHandler(
       const skip = parseInt(req.query.skip as string) || 0;
 
       const comments = await Comment.find({ postId })
+        .sort({ _id: 1 })
+        .limit(limit)
+        .skip(skip)
         .populate("userId", "username image")
+        .populate({ path: "parentComment", model: "Comment" })
         .populate({
           path: "replies",
           populate: { path: "userId", select: "username image" },
         })
-        .sort({ _id: 1 })
-        .limit(limit)
-        .skip(skip)
         .exec();
 
       console.log("Api comment fetching", JSON.stringify(comments, null, 2));
 
+      const commentMap: Record<string, any> = {};
+      const topLevelComment: any[] = [];
+
+      comments.forEach((comment) => {
+        const commentId = comment._id!.toString();
+        comment.replies = [];
+
+        commentMap[commentId] = comment;
+      });
+
+      comments.forEach((comment) => {
+        if (comment.parentComment) {
+          const parentId = comment.parentComment.toString();
+
+          if (commentMap[parentId]) {
+            commentMap[parentId].replies.push(comment);
+          }
+        } else {
+          topLevelComment.push(comment);
+        }
+      });
+
+      console.log("topLevelComment", topLevelComment);
       res.status(200).json({
         success: true,
-        comments,
+        comments: topLevelComment,
       });
     } catch (error) {
       console.error("Something went wrong!", error);
@@ -298,9 +322,13 @@ export const replyComment = asyncHandler(
         io
       );
 
+      const parentComment = await Comment.findById(req.body.parentCommentId);
+
+      console.log("parent comment replies", parentComment?.replies);
+
       res.status(200).json({
         success: true,
-        reply,
+        reply: populatedReply,
       });
     } catch (error) {
       console.error("Something went wrong!", error);

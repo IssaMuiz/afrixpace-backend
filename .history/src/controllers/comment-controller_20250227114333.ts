@@ -6,7 +6,6 @@ import io from "../app";
 import mongoose from "mongoose";
 import { sendNotification } from "../utils/notification-helper";
 import { Server } from "socket.io";
-import path from "path";
 
 export const addComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -82,17 +81,11 @@ export const getComments = asyncHandler(
       const skip = parseInt(req.query.skip as string) || 0;
 
       const comments = await Comment.find({ postId })
-        .populate("userId", "username image")
-        .populate({
-          path: "replies",
-          populate: { path: "userId", select: "username image" },
-        })
         .sort({ _id: 1 })
         .limit(limit)
         .skip(skip)
-        .exec();
-
-      console.log("Api comment fetching", JSON.stringify(comments, null, 2));
+        .populate("userId", "username image")
+        .populate({ path: "parentComment", select: "content userId" });
 
       res.status(200).json({
         success: true,
@@ -280,16 +273,9 @@ export const replyComment = asyncHandler(
 
       await reply.save();
 
-      await Comment.findByIdAndUpdate(
-        parentCommentId,
-        {
-          $push: { replies: reply._id },
-        },
-        { new: true }
-      );
-
-      const populatedReply = await reply.populate("userId", "username image");
-
+      await Comment.findByIdAndUpdate(parentCommentId, {
+        $push: { replies: reply._id },
+      });
       sendNotification(
         parent!.userId._id,
         userId,

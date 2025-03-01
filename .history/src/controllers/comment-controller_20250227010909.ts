@@ -6,7 +6,6 @@ import io from "../app";
 import mongoose from "mongoose";
 import { sendNotification } from "../utils/notification-helper";
 import { Server } from "socket.io";
-import path from "path";
 
 export const addComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -82,17 +81,11 @@ export const getComments = asyncHandler(
       const skip = parseInt(req.query.skip as string) || 0;
 
       const comments = await Comment.find({ postId })
-        .populate("userId", "username image")
-        .populate({
-          path: "replies",
-          populate: { path: "userId", select: "username image" },
-        })
         .sort({ _id: 1 })
         .limit(limit)
         .skip(skip)
-        .exec();
-
-      console.log("Api comment fetching", JSON.stringify(comments, null, 2));
+        .populate("userId", "username image")
+        .populate({ path: "parentComment", select: "content userId" });
 
       res.status(200).json({
         success: true,
@@ -247,23 +240,13 @@ export const replyComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
     try {
       const io: Server = (req as any).io;
-      const { content, parentCommentId } = req.body;
-      const postId = new mongoose.Types.ObjectId(req.params.postId);
+      const { parentCommentId } = req.params;
+      const { content, postId } = req.body;
       const userId = req.user?.id;
 
-      if (
-        !mongoose.Types.ObjectId.isValid(postId) ||
-        !mongoose.Types.ObjectId.isValid(parentCommentId)
-      ) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid postId or parentCommentId",
-        });
-      }
+      const parentComment = await Comment.findById(parentCommentId);
 
-      const parent = await Comment.findById(parentCommentId);
-
-      if (!parent) {
+      if (!parentComment) {
         res.status(404).json({
           success: false,
           message: "Comment cannot be found!",
@@ -280,18 +263,12 @@ export const replyComment = asyncHandler(
 
       await reply.save();
 
-      await Comment.findByIdAndUpdate(
-        parentCommentId,
-        {
-          $push: { replies: reply._id },
-        },
-        { new: true }
-      );
+      parentComment!.replies.push(reply._id as mongoose.Types.ObjectId);
 
-      const populatedReply = await reply.populate("userId", "username image");
+      await parentComment?.save();
 
       sendNotification(
-        parent!.userId._id,
+        parentComment!.userId._id,
         userId,
         "REPLY",
         `${req.user?.username} reply your comment`,

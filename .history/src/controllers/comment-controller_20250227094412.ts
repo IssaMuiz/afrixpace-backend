@@ -6,7 +6,6 @@ import io from "../app";
 import mongoose from "mongoose";
 import { sendNotification } from "../utils/notification-helper";
 import { Server } from "socket.io";
-import path from "path";
 
 export const addComment = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
@@ -82,17 +81,11 @@ export const getComments = asyncHandler(
       const skip = parseInt(req.query.skip as string) || 0;
 
       const comments = await Comment.find({ postId })
-        .populate("userId", "username image")
-        .populate({
-          path: "replies",
-          populate: { path: "userId", select: "username image" },
-        })
         .sort({ _id: 1 })
         .limit(limit)
         .skip(skip)
-        .exec();
-
-      console.log("Api comment fetching", JSON.stringify(comments, null, 2));
+        .populate("userId", "username image")
+        .populate({ path: "parentComment", select: "content userId" });
 
       res.status(200).json({
         success: true,
@@ -255,12 +248,17 @@ export const replyComment = asyncHandler(
         !mongoose.Types.ObjectId.isValid(postId) ||
         !mongoose.Types.ObjectId.isValid(parentCommentId)
       ) {
-        res.status(400).json({
-          success: false,
-          message: "Invalid postId or parentCommentId",
-        });
+        res
+          .status(400)
+          .json({
+            success: false,
+            message: "Invalid postId or parentCommentId",
+          });
       }
 
+      const parentCommentObjectId = new mongoose.Types.ObjectId(
+        parentCommentId
+      );
       const parent = await Comment.findById(parentCommentId);
 
       if (!parent) {
@@ -274,21 +272,15 @@ export const replyComment = asyncHandler(
         userId,
         postId,
         content,
-        parentComment: parentCommentId,
+        parentComment: parentCommentObjectId,
         replies: [],
       });
 
       await reply.save();
 
-      await Comment.findByIdAndUpdate(
-        parentCommentId,
-        {
-          $push: { replies: reply._id },
-        },
-        { new: true }
-      );
+      parent!.replies.push(reply._id as mongoose.Types.ObjectId);
 
-      const populatedReply = await reply.populate("userId", "username image");
+      await parent?.save();
 
       sendNotification(
         parent!.userId._id,
